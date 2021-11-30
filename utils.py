@@ -1,12 +1,15 @@
 # coding=utf-8
-from pyasn1.type.univ import Null
+
 import requests
 import json
 import hmac
 import hashlib
-import rsa
 import base64
 from hashlib import sha256
+from Crypto import Random
+from Crypto.Signature import PKCS1_v1_5 as pk
+from Crypto.Hash import SHA256
+from Crypto.PublicKey import RSA
 
 from rsa import key
 
@@ -48,24 +51,35 @@ def md5(data):
 def hmacSha256(data,secretKey):
    return hmac.new(secretKey.encode('utf-8'), data.encode('utf-8'), digestmod=sha256).hexdigest()
 
+
 def rsaSign(data,privateKey):
-    privKey = rsa.PrivateKey.load_pkcs1(base64.b64decode(privateKey),format='DER')
-    return base64.b64encode(rsa.sign(data.encode('utf-8'),privKey,'SHA-256')).decode()
+    pkcs8Key = RSA.import_key(base64.b64decode(privateKey))
+    h = SHA256.new(data.encode('utf-8'))
+    signer = pk.new(pkcs8Key)
+    signature = signer.sign(h)
+    return base64.b64encode(signature).decode()
+
 
 def rsaVerify(data,publicKey,sign):
-    pubKey = rsa.PublicKey.load_pkcs1(base64.b64decode(publicKey),format='DER')
-    return rsa.verify(data.encode('utf-8'),base64.b64decode(sign),pubKey)
+    try:
+        pkcs8Key = RSA.import_key(base64.b64decode(publicKey))
+        h = SHA256.new(data.encode('utf-8'))
+        signer = pk.new(pkcs8Key)
+        signer.verify(h,sign.encode('utf-8'))
+        return True
+    except:
+        return False
 
 def genKey():
-    (pubkey, privkey) = rsa.newkeys(1024)
-    pubkey = base64.b64encode(pubkey.save_pkcs1(format='DER')).decode()
-    privkey = base64.b64encode(privkey.save_pkcs1(format="DER")).decode()
-    # pubkey = pubkey.save_pkcs1(format='PEM').decode().replace("-----BEGIN RSA PUBLIC KEY-----","").replace("-----END RSA PUBLIC KEY-----","").replace("\n","")
-    # privkey = privkey.save_pkcs1(format="PEM").decode().replace("-----BEGIN RSA PRIVATE KEY-----","").replace("-----END RSA PRIVATE KEY-----","").replace("\n","")
+
+    seeds = Random.new().read
+    rsa = RSA.generate(1024, seeds)
+    privateKey =base64.b64encode(rsa.exportKey(format='DER')).decode()
+    publicKey = base64.b64encode(rsa.publickey().exportKey(format='DER')).decode()
 
     keys = {}
-    keys['pubKey'] = pubkey
-    keys['privKey'] = privkey
+    keys['pubKey'] = publicKey
+    keys['privKey'] = privateKey
     return keys
 
 if __name__ == '__main__':
@@ -84,7 +98,9 @@ if __name__ == '__main__':
     privKey = keys['privKey']
     pubKey = keys['pubKey']
 
-    print(len(privKey))
+    print(privKey)
+    print(pubKey)
+
     sign = rsaSign(baseString,privKey)
     
     print(sign)
