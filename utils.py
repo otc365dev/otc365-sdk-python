@@ -26,6 +26,7 @@ def httpPost(url,params):
     if resp.status_code != 200:
         respBody['code'] = resp.status_code
         respBody['msg'] = resp.text
+        return json.dumps(respBody)
     else:
         return resp.text
 
