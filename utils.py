@@ -38,6 +38,8 @@ def getBaseString(params):
     baseString = ''
     for key in keys:
         i=i+1;
+        if params[key] == None or str(params[key]) == '':
+            continue
         if i == size:
             baseString=baseString+key+"="+str(params[key])
         else:
