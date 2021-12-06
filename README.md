@@ -1,3 +1,3 @@
 # otc365-sdk-python
 
-dependency requests pycryptodome
+dependency python3 requests pycryptodome
