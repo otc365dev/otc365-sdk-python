@@ -30,7 +30,14 @@ def httpPost(url,params):
     else:
         return resp.text
 
+def removeEmptyValue(params):
+    for k in list(params.keys()):
+        if params[k] == None or str(params[k]) == '':
+            del params[k]
+
 def getBaseString(params):
+
+    removeEmptyValue(params)
 
     keys = sorted(params)
     size = len(params)
@@ -38,8 +45,6 @@ def getBaseString(params):
     baseString = ''
     for key in keys:
         i=i+1;
-        if params[key] == None or str(params[key]) == '':
-            continue
         if i == size:
             baseString=baseString+key+"="+str(params[key])
         else:
@@ -92,6 +97,8 @@ if __name__ == '__main__':
     params['c'] = '111'
     params['a'] = '2222'
     params['m'] = 100
+    params['n'] = '1'
+    params['l'] = None
     baseString = getBaseString(params)
     print(baseString)
     print(md5(baseString))
